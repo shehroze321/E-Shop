@@ -1,50 +1,57 @@
-import React,{useEffect} from "react";
+import React, { useEffect } from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import {
-  LoginPage,
-  SignupPage,
-  ActivationPage,
-  
-} from "./routes/Routes.js";
+import { LoginPage, SignupPage, ActivationPage,HomePage,ProductsPage,BestSellingPage,EventPage,FAQPage,ProductDetailsPage,ProfilePage} from "./routes/Routes";
 
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import request from "./utils/request";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Store from "./redux/store";
+import { loadUser } from "./redux/actions/user";
+import { useSelector } from "react-redux";
 const App = () => {
+  const { loading } = useSelector((state) => state.user);
+
   useEffect(() => {
-    try {
-     const res= request.get(`/user/getuser`,{withCredentials:true})
-      toast.success(res.data.message);
-    } catch (error) {
-      // console.log(error.response.data.message)
-      // toast.error(error.res.data.message);
-      
-    }
-  }, [])
-  
+    Store.dispatch(loadUser());
+  }, []);
+
   return (
-    <BrowserRouter>
+    <>
+    {
+      loading ? ( null):(
+        <BrowserRouter>
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/sign-up" element={<SignupPage />} />
-        <Route path="/activation/:activation_token" element={<ActivationPage />} />
-        
+        <Route
+          path="/activation/:activation_token"
+          element={<ActivationPage />}
+        />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/product/:name" element={<ProductDetailsPage />} />
+        <Route path="/best-selling" element={<BestSellingPage />} />
+        <Route path="/events" element={<EventPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+
       </Routes>
       <ToastContainer
-position="bottom-center"
-autoClose={5000}
-hideProgressBar={false}
-newestOnTop={false}
-closeOnClick
-rtl={false}
-pauseOnFocusLoss
-draggable
-pauseOnHover
-theme="dark"
-/>
-      
+        position="bottom-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </BrowserRouter>
+      )
+    }
+    </>
   );
 };
 

@@ -20,6 +20,7 @@ const Login = () => {
       },{withCredentials:true});
       toast.success("Login Success!");
       navigate("/");
+      window.location.reload(true);
 
     } catch (error) {
       toast.error(error.response.data.message);
