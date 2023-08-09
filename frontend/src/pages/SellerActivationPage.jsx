@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import request from "../utils/request";
 
-const ActivationPage = () => {
+const SellerActivationPage = () => {
   const { activation_token } = useParams();
   const [error, setError] = useState(false);
   
@@ -12,7 +12,7 @@ const ActivationPage = () => {
     if (activation_token) {
       const sendRequest = async () => {
         try {
-          const res = await request.post(`/user/activation`, {
+          const res = await request.post(`/shop/activation`, {
             activation_token,
           });
           console.log(res.data.message);
@@ -39,10 +39,10 @@ const ActivationPage = () => {
       {error ? (
         <p>Your token is expired!</p>
       ) : (
-        <p>Your account has been created suceessfully!</p>
+        <p>Your shop has been created suceessfully!</p>
       )}
     </div>
   );
 };
 
-export default ActivationPage;
+export default SellerActivationPage;

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 
-import Login from "../components/Login/Login.jsx";
+import Login from "../components/Login/Login";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 

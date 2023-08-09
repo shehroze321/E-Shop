@@ -9,18 +9,19 @@ import {
 } from "react-icons/ai";
 import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
 import { BiMenuAltLeft } from "react-icons/bi";
-import {CgProfile} from "react-icons/cg";
+import { CgProfile } from "react-icons/cg";
 import DropDown from "./DropDown";
 import Navbar from "./Navbar.jsx";
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 import { backend_url } from "../../utils/request";
 
 import Cart from "../cart/Cart";
 import Wishlist from "../Wishlist/Wishlist";
+import { RxCross1 } from "react-icons/rx";
 // import { RxCross1 } from "react-icons/rx";
 
 const Header = ({ activeHeading }) => {
-    const { isAuthenticated, user } = useSelector((state) => state.user);
+  const { isAuthenticated, user } = useSelector((state) => state.user);
   //   const { isSeller } = useSelector((state) => state.seller);
   //   const { wishlist } = useSelector((state) => state.wishlist);
   //   const { cart } = useSelector((state) => state.cart);
@@ -30,8 +31,8 @@ const Header = ({ activeHeading }) => {
   const [active, setActive] = useState(false);
   const [dropDown, setDropDown] = useState(false);
   const [open, setOpen] = useState(false);
-  const [openCart, setOpenCart]=useState(false);
-  const [openWishList, setOpenWishList]=useState(false);
+  const [openCart, setOpenCart] = useState(false);
+  const [openWishList, setOpenWishList] = useState(false);
   // console.log(user);
 
   const handleSearchChange = (e) => {
@@ -83,8 +84,8 @@ const Header = ({ activeHeading }) => {
               <div className="absolute min-h-[30vh] bg-slate-50 shadow-sm-2 z-[9] p-4">
                 {searchData &&
                   searchData.map((i, index) => {
-                    const d= i.name;
-                    const Product_name= d.replace(/\+/g,"-");
+                    const d = i.name;
+                    const Product_name = d.replace(/\+/g, "-");
                     return (
                       <Link to={`/product/${Product_name}`}>
                         <div className="w-full flex items-start-py-3">
@@ -103,7 +104,7 @@ const Header = ({ activeHeading }) => {
           </div>
 
           <div className={`${styles.button}`}>
-            <Link to="/seller">
+            <Link to="/shop-create">
               <h1 className="text-[#fff] flex items-center">
                 Become Seller <IoIosArrowForward className="ml-1" />
               </h1>
@@ -176,7 +177,7 @@ const Header = ({ activeHeading }) => {
 
             <div className={`${styles.noramlFlex}`}>
               <div className="relative cursor-pointer mr-[15px]">
-              {isAuthenticated ? (
+                {isAuthenticated ? (
                   <div>
                     <Link to="/profile">
                       <img
@@ -187,27 +188,18 @@ const Header = ({ activeHeading }) => {
                     </Link>
                   </div>
                 ) : (
-                  
-                    <Link
-                      to="/login"
-                    >
-                    <CgProfile size={30} color="rgb(255,255,255 /83%)"  />
-                    </Link>
+                  <Link to="/login">
+                    <CgProfile size={30} color="rgb(255,255,255 /83%)" />
+                  </Link>
                 )}
               </div>
             </div>
             {/* Cart popup */}
-            {
-                openCart ?(
-                    <Cart setOpenCart={setOpenCart}/>
-                ):null
-            }
+            {openCart ? <Cart setOpenCart={setOpenCart} /> : null}
             {/* Wishlist popup */}
-            {
-                openWishList ?(
-                    <Wishlist setOpenWishList={setOpenWishList}/>
-                ):null
-            }
+            {openWishList ? (
+              <Wishlist setOpenWishList={setOpenWishList} />
+            ) : null}
           </div>
         </div>
       </div>
@@ -239,15 +231,19 @@ const Header = ({ activeHeading }) => {
           <div>
             <div
               className="relative mr-[20px]"
-            //   onClick={() => setOpenCart(true)}
+              onClick={() => setOpenCart(true)}
             >
               <AiOutlineShoppingCart size={30} />
               <span class="absolute right-0 top-0 rounded-full bg-[#3bc177] w-4 h-4 top right p-0 m-0 text-white font-mono text-[12px]  leading-tight text-center">
-                {/* {cart && cart.length} */}
+                1{" "}
               </span>
             </div>
           </div>
           {/* cart popup */}
+          {openCart ? <Cart setOpenCart={setOpenCart} /> : null}
+
+{/* wishlist popup */}
+{openWishList ? <Wishlist setOpenWishList={setOpenWishList} /> : null}
         </div>
 
         {/* header sidebar */}
@@ -264,12 +260,17 @@ const Header = ({ activeHeading }) => {
                   >
                     <AiOutlineHeart size={30} className="mt-5 ml-3" />
                     <span class="absolute right-0 top-0 rounded-full bg-[#3bc177] w-4 h-4 top right p-0 m-0 text-white font-mono text-[12px]  leading-tight text-center">
-                      {/* {wishlist && wishlist.length} */}
+                      0
                     </span>
                   </div>
                 </div>
+                <RxCross1
+                  size={30}
+                  className="ml-4 mt-5"
+                  onClick={() => setOpen(false)}
+                />
               </div>
-
+            {/* Search bar */}
               <div className="my-8 w-[92%] m-auto h-[40px relative]">
                 <input
                   type="search"
@@ -301,7 +302,7 @@ const Header = ({ activeHeading }) => {
                 )}
               </div>
 
-              {/* <Navbar active={activeHeading} /> */}
+              <Navbar active={activeHeading} />
               <div className={`${styles.button} ml-4 !rounded-[4px]`}>
                 <Link to="/shop-create">
                   <h1 className="text-[#fff] flex items-center">
@@ -325,12 +326,20 @@ const Header = ({ activeHeading }) => {
                     </Link>
                   </div>
                 ) : (
-                  
-                    <Link
+                  <>
+                 <Link
                       to="/login"
+                      className="text-[18px] pr-[10px] text-[#000000b7]"
                     >
-                    <CgProfile size={30} color="rgb(255,255,255 /83%)"  />
+                      Login /
                     </Link>
+                    <Link
+                      to="/sign-up"
+                      className="text-[18px] text-[#000000b7]"
+                    >
+                      Sign up
+                    </Link>
+                  </>
                 )}
               </div>
             </div>
