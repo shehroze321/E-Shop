@@ -1,70 +1,73 @@
 const express = require("express");
-const path= require("path");
+const path = require("path");
 const User = require("../model/user");
 const router = express.Router();
 const { upload } = require("../multer");
 const ErrorHandler = require("../utils/ErrorHandler");
-const catchAsyncErrors= require("../middleware/catchAsyncErrors");
-const fs= require("fs");
-const jwt=require("jsonwebtoken");
-const sendMail= require("../utils/sendMail");
-const sendToken= require("../utils/sendToken");
+const catchAsyncErrors = require("../middleware/catchAsyncErrors");
+const fs = require("fs");
+const jwt = require("jsonwebtoken");
+const sendMail = require("../utils/sendMail");
+const sendToken = require("../utils/sendToken");
 const { isAuthenticated } = require("../middleware/auth");
 
 // create user
-router.post("/create-user", upload.single("avatar"),catchAsyncErrors(async (req, res, next) => {
-  try {
-    const { name, email, password } = req.body;
-    const userEmail = await User.findOne({ email });
-
-    if (userEmail) {
-    const filename = req.file.filename;
-    const filePath=`uploads/${filename}`;
-    fs.unlink(filePath,(err)=>{
-      if(err){
-        console.log(err);
-        res.status(500).json({message:"Error deleteing file"});
-      }
-    })
-      return next(new ErrorHandler("User already exists", 400));
-    }
-    // const filename = req.file.filename;
-    // const fileurl = path.join(filename);
-
-    const { filename, path } = req.file; // Get the file information from req.file
-
-    const user = {
-      name: name,
-      email: email,
-      password: password,
-      avatar: {
-        public_id: filename, // Use the filename as the public_id
-        url: path, // Use the path as the url
-      },
-    };
-    
-    const activationToken = createActivationToken(user);
-
-    const activationUrl = `http://localhost:3000/activation/${activationToken}`;
-
+router.post(
+  "/create-user",
+  upload.single("avatar"),
+  catchAsyncErrors(async (req, res, next) => {
     try {
-      await sendMail({
-        email: user.email,
-        subject: "Activate your account",
-        message: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`,
-      });
-      res.status(201).json({
-        success: true,
-        message: `please check your email:- ${user.email} to activate your account!`,
-      });
+      const { name, email, password } = req.body;
+      const userEmail = await User.findOne({ email });
+
+      if (userEmail) {
+        // const filename = req.file.filename;
+        // const filePath = `uploads/${filename}`;
+        // fs.unlink(filePath, (err) => {
+        //   if (err) {
+        //     console.log(err);
+        //     res.status(500).json({ message: "Error deleteing file" });
+        //   }
+        // });
+        return next(new ErrorHandler("User already exists", 400));
+      }
+      const filename = req.file.filename;
+      const fileurl = path.join(filename);
+
+      // const { filename, path } = req.file; // Get the file information from req.file
+
+      const user = {
+        name: name,
+        email: email,
+        password: password,
+        avatar: fileurl,
+      };
+
+      const activationToken = createActivationToken(user);
+
+      const activationUrl = `http://localhost:3000/activation/${activationToken}`;
+
+      try {
+        await sendMail({
+          email: user.email,
+          subject: "Activate your account",
+          message: `Hello ${user.name}, please click on the link to activate your account: ${activationUrl}`,
+        });
+        res.status(201).json({
+          success: true,
+          message: `please check your email:- ${user.email} to activate your account!`,
+        });
+      } catch (error) {
+        console.log("🚀 ~ file: user.js:61 ~ catchAsyncErrors ~ error:", error);
+        return next(new ErrorHandler(error.message, 500));
+      }
+      console.log(user);
     } catch (error) {
-      return next(new ErrorHandler(error.message, 500));
+      console.log("🚀 ~ file: user.js:66 ~ catchAsyncErrors ~ error:", error);
+      return next(new ErrorHandler(error.message, 400));
     }
-    console.log(user);
-  } catch (error) {
-    return next(new ErrorHandler(error.message, 400));
-  }
-}));
+  })
+);
 
 // create activation token
 const createActivationToken = (user) => {
@@ -72,7 +75,6 @@ const createActivationToken = (user) => {
     expiresIn: "5m",
   });
 };
-
 
 // activate user
 router.post(
@@ -100,7 +102,7 @@ router.post(
         name,
         email,
         password,
-        avatar
+        avatar,
       });
 
       sendToken(user, 201, res);
@@ -136,13 +138,11 @@ router.post(
       }
 
       sendToken(user, 201, res);
-      
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }
   })
 );
-
 
 // load user
 router.get(
@@ -187,4 +187,168 @@ router.get(
   })
 );
 
+// update user info
+router.put(
+  "/update-user-info",
+  isAuthenticated,
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const { email, password, phoneNumber, name } = req.body;
+
+      const user = await User.findOne({ email }).select("+password");
+
+      if (!user) {
+        return next(new ErrorHandler("User not found", 400));
+      }
+
+      const isPasswordValid = await user.comparePassword(password);
+
+      if (!isPasswordValid) {
+        return next(
+          new ErrorHandler("Please provide the correct information", 400)
+        );
+      }
+
+      user.name = name;
+      user.email = email;
+      user.phoneNumber = phoneNumber;
+
+      await user.save();
+
+      res.status(201).json({
+        success: true,
+        user,
+      });
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
+
+// update user avatar
+router.put(
+  "/update-avatar",isAuthenticated,
+  upload.single("image"),
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const existsUser = await User.findById(req.user.id);
+      const existAvatarPath = `uploads/${existsUser.avatar}`;
+      fs.unlinkSync(existAvatarPath);
+      const fileUrl = path.join(req.file.filename);
+      const user = await User.findByIdAndUpdate(req.user.id, {
+        avatar: fileUrl,
+      });
+      console.log("🚀 ~ file: user.js:241 ~ catchAsyncErrors ~ user:", user)
+
+      // await existsUser.save();
+
+      res.status(200).json({
+        success: true,
+        user,
+      });
+    } catch (error) {
+      console.log("🚀 ~ file: user.js:249 ~ catchAsyncErrors ~ error:", error)
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
+// update user addresses
+router.put(
+  "/update-user-addresses",
+  isAuthenticated,
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const user = await User.findById(req.user.id);
+
+      const sameTypeAddress = user.addresses.find(
+        (address) => address.addressType === req.body.addressType
+      );
+      if (sameTypeAddress) {
+        return next(
+          new ErrorHandler(`${req.body.addressType} address already exists`)
+        );
+      }
+
+      const existsAddress = user.addresses.find(
+        (address) => address._id === req.body._id
+      );
+
+      if (existsAddress) {
+        Object.assign(existsAddress, req.body);
+      } else {
+        // add the new address to the array
+        user.addresses.push(req.body);
+      }
+
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        user,
+      });
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
+
+// delete user address
+router.delete(
+  "/delete-user-address/:id",
+  isAuthenticated,
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const userId = req.user._id;
+      const addressId = req.params.id;
+
+      await User.updateOne(
+        {
+          _id: userId,
+        },
+        { $pull: { addresses: { _id: addressId } } }
+      );
+
+      const user = await User.findById(userId);
+
+      res.status(200).json({ success: true, user });
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
+
+// update user password
+router.put(
+  "/update-user-password",
+  isAuthenticated,
+  catchAsyncErrors(async (req, res, next) => {
+    try {
+      const user = await User.findById(req.user.id).select("+password");
+
+      const isPasswordMatched = await user.comparePassword(
+        req.body.oldPassword
+      );
+
+      if (!isPasswordMatched) {
+        return next(new ErrorHandler("Old password is incorrect!", 400));
+      }
+
+      if (req.body.newPassword !== req.body.confirmPassword) {
+        return next(
+          new ErrorHandler("Password doesn't matched with each other!", 400)
+        );
+      }
+      user.password = req.body.newPassword;
+
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Password updated successfully!",
+      });
+    } catch (error) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  })
+);
 module.exports = router;

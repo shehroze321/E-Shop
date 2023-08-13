@@ -135,8 +135,8 @@ const Singup = () => {
                 <span className="inline-block h-8 w-8 rounded-full overflow-hidden">
                   {avatar ? (
                     <img
-                      src={avatar}
-                      alt="avatar"
+                    src={avatar instanceof File ? URL.createObjectURL(avatar) : avatar}
+                    alt="avatar"
                       className="h-full w-full object-cover rounded-full"
                     />
                   ) : (

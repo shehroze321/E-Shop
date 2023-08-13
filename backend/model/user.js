@@ -25,6 +25,9 @@ const userSchema = new mongoose.Schema({
       country: {
         type: String,
       },
+      state:{
+        type: String,
+      },
       city:{
         type: String,
       },
@@ -47,14 +50,16 @@ const userSchema = new mongoose.Schema({
     default: "user",
   },
   avatar:{
-    public_id: {
-      type: String,
-      required: true,
-    },
-    url: {
-      type: String,
-      required: true,
-    },
+    type: String,
+    required: true,
+    // public_id: {
+    //   type: String,
+    //   required: true,
+    // },
+    // url: {
+    //   type: String,
+    //   required: true,
+    // },
  },
  createdAt:{
   type: Date,

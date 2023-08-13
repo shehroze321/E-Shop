@@ -22,9 +22,11 @@ import { RxCross1 } from "react-icons/rx";
 
 const Header = ({ activeHeading }) => {
   const { isAuthenticated, user } = useSelector((state) => state.user);
+  const { allProducts } = useSelector((state) => state.products);
+
   //   const { isSeller } = useSelector((state) => state.seller);
-  //   const { wishlist } = useSelector((state) => state.wishlist);
-  //   const { cart } = useSelector((state) => state.cart);
+    const { wishlist } = useSelector((state) => state.wishlist);
+    const { cart } = useSelector((state) => state.cart);
   //   const { allProducts } = useSelector((state) => state.products);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchData, setSearchData] = useState(null);
@@ -32,16 +34,18 @@ const Header = ({ activeHeading }) => {
   const [dropDown, setDropDown] = useState(false);
   const [open, setOpen] = useState(false);
   const [openCart, setOpenCart] = useState(false);
-  const [openWishList, setOpenWishList] = useState(false);
+  const [openWishlist, setOpenWishlist] = useState(false);
   // console.log(user);
 
   const handleSearchChange = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
 
-    const filteredProducts = productData.filter((product) =>
-      product.name.toLowerCase().includes(term.toLowerCase())
-    );
+    const filteredProducts =
+      allProducts &&
+      allProducts.filter((product) =>
+        product.name.toLowerCase().includes(term.toLowerCase())
+      );
     console.log("filteredProducts", filteredProducts);
 
     setSearchData(filteredProducts);
@@ -84,13 +88,14 @@ const Header = ({ activeHeading }) => {
               <div className="absolute min-h-[30vh] bg-slate-50 shadow-sm-2 z-[9] p-4">
                 {searchData &&
                   searchData.map((i, index) => {
-                    const d = i.name;
-                    const Product_name = d.replace(/\+/g, "-");
+                   // const d = i.name;
+
+                      // const Product_name = d.replace(/\s+/g, "-");
                     return (
-                      <Link to={`/product/${Product_name}`}>
+                      <Link to={`/product/${i._id}`}>
                         <div className="w-full flex items-start-py-3">
                           <img
-                            src={i.image_Url[0].url}
+                            src={`${backend_url}${i.images[0]}`}
                             alt=""
                             className="w-[40px] h-[40px] mr-[10px]"
                           />
@@ -151,11 +156,11 @@ const Header = ({ activeHeading }) => {
             <div className={`${styles.noramlFlex}`}>
               <div
                 className="relative cursor-pointer mr-[15px]"
-                onClick={() => setOpenWishList(true)}
+                onClick={() => setOpenWishlist(true)}
               >
                 <AiOutlineHeart size={30} color="rgb(255 255 255 / 83%)" />
                 <span className="absolute right-0 top-0 rounded-full bg-[#3bc177] w-4 h-4 top right p-0 m-0 text-white font-mono text-[12px] leading-tight text-center">
-                  0
+                  {wishlist && wishlist.length}
                 </span>
               </div>
             </div>
@@ -170,7 +175,7 @@ const Header = ({ activeHeading }) => {
                   color="rgb(255 255 255 / 83%)"
                 />
                 <span className="absolute right-0 top-0 rounded-full bg-[#3bc177] w-4 h-4 top right p-0 m-0 text-white font-mono text-[12px] leading-tight text-center">
-                  1
+                  {cart && cart.length}
                 </span>
               </div>
             </div>
@@ -181,7 +186,7 @@ const Header = ({ activeHeading }) => {
                   <div>
                     <Link to="/profile">
                       <img
-                        src={`${backend_url}${user.avatar.url}`}
+                        src={`${backend_url}${user?.avatar}`}
                         alt=""
                         className="w-[30px] h-[30px] rounded-full "
                       />
@@ -197,8 +202,8 @@ const Header = ({ activeHeading }) => {
             {/* Cart popup */}
             {openCart ? <Cart setOpenCart={setOpenCart} /> : null}
             {/* Wishlist popup */}
-            {openWishList ? (
-              <Wishlist setOpenWishList={setOpenWishList} />
+            {openWishlist ? (
+              <Wishlist setOpenWishlist={setOpenWishlist} />
             ) : null}
           </div>
         </div>
@@ -235,15 +240,16 @@ const Header = ({ activeHeading }) => {
             >
               <AiOutlineShoppingCart size={30} />
               <span class="absolute right-0 top-0 rounded-full bg-[#3bc177] w-4 h-4 top right p-0 m-0 text-white font-mono text-[12px]  leading-tight text-center">
-                1{" "}
+              {cart && cart.length}
+
               </span>
             </div>
           </div>
           {/* cart popup */}
           {openCart ? <Cart setOpenCart={setOpenCart} /> : null}
 
-{/* wishlist popup */}
-{openWishList ? <Wishlist setOpenWishList={setOpenWishList} /> : null}
+          {/* wishlist popup */}
+          {openWishlist ? <Wishlist setOpenWishlist={setOpenWishlist} /> : null}
         </div>
 
         {/* header sidebar */}
@@ -260,7 +266,8 @@ const Header = ({ activeHeading }) => {
                   >
                     <AiOutlineHeart size={30} className="mt-5 ml-3" />
                     <span class="absolute right-0 top-0 rounded-full bg-[#3bc177] w-4 h-4 top right p-0 m-0 text-white font-mono text-[12px]  leading-tight text-center">
-                      0
+                  {wishlist && wishlist.length}
+                      
                     </span>
                   </div>
                 </div>
@@ -270,7 +277,7 @@ const Header = ({ activeHeading }) => {
                   onClick={() => setOpen(false)}
                 />
               </div>
-            {/* Search bar */}
+              {/* Search bar */}
               <div className="my-8 w-[92%] m-auto h-[40px relative]">
                 <input
                   type="search"
@@ -282,14 +289,14 @@ const Header = ({ activeHeading }) => {
                 {searchData && (
                   <div className="absolute bg-[#fff] z-10 shadow w-full left-0 p-3">
                     {searchData.map((i) => {
-                      const d = i.name;
+                      // const d = i.name;
 
-                      const Product_name = d.replace(/\s+/g, "-");
+                      // const Product_name = d.replace(/\s+/g, "-");
                       return (
-                        <Link to={`/product/${Product_name}`}>
+                        <Link to={`/product/${i._id}`}>
                           <div className="flex items-center">
                             <img
-                              src={i.image_Url[0]?.url}
+                              src={`${backend_url}${i.images[0]}`}
                               alt=""
                               className="w-[50px] mr-2"
                             />
@@ -327,7 +334,7 @@ const Header = ({ activeHeading }) => {
                   </div>
                 ) : (
                   <>
-                 <Link
+                    <Link
                       to="/login"
                       className="text-[18px] pr-[10px] text-[#000000b7]"
                     >

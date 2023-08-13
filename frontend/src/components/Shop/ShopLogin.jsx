@@ -19,7 +19,7 @@ const ShopLogin = () => {
         password,
       },{withCredentials:true});
       toast.success("Login Success!");
-    //   navigate("/");
+      navigate("/dashboard");
       window.location.reload(true);
 
     } catch (error) {
