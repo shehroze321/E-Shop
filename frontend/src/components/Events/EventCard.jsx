@@ -5,10 +5,26 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { backend_url } from "../../utils/request";
+import { addTocart } from "../../redux/actions/cart";
 
 const EventCard = ({ active, data }) => {
-  console.log("🚀 ~ file: EventCard.jsx:10 ~ EventCard ~ data:", data)
-  
+  const { cart } = useSelector((state) => state.cart);
+  const dispatch = useDispatch();
+
+  const addToCartHandler = (data) => {
+    const isItemExists = cart && cart.find((i) => i._id === data._id);
+    if (isItemExists) {
+      toast.error("Item already in cart!");
+    } else {
+      if (data.stock < 1) {
+        toast.error("Product stock limited!");
+      } else {
+        const cartData = { ...data, qty: 1 };
+        dispatch(addTocart(cartData));
+        toast.success("Item added to cart successfully!");
+      }
+    }
+  }  
 
   return (
     <div
@@ -43,7 +59,7 @@ const EventCard = ({ active, data }) => {
           </Link>
           <div
             className={`${styles.button} text-[#fff] ml-5`}
-            // onClick={() => addToCartHandler(data)}
+            onClick={() => addToCartHandler(data)}
           >
             Add to cart
           </div>

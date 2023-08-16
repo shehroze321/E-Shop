@@ -6,9 +6,13 @@ import styles from "../../styles/styles";
 import ProductCard from "../Route/ProductCard/ProductCard";
 // import Ratings from "../Products/Ratings";
 import { getAllEventsShop } from "../../redux/actions/event";
+import Ratings from "../Products/Ratings";
+import { backend_url } from "../../utils/request";
 
 const ShopProfileData = ({ isOwner }) => {
   const { products } = useSelector((state) => state.products);
+  const {events}= useSelector((state)=>state.events);
+  const {seller}= useSelector((state)=>state.seller)
   const { id } = useParams();
   const dispatch = useDispatch();
 
@@ -19,8 +23,8 @@ const ShopProfileData = ({ isOwner }) => {
 
   const [active, setActive] = useState(1);
 
-  // const allReviews =
-  //   products && products.map((product) => product.reviews).flat();
+  const allReviews =
+    products && products.map((product) => product.reviews).flat();
 
   return (
     <div className="w-full">
@@ -77,7 +81,7 @@ const ShopProfileData = ({ isOwner }) => {
             ))}
         </div>
       )}
-{/* 
+
       {active === 2 && (
         <div className="w-full">
           <div className="grid grid-cols-1 gap-[20px] md:grid-cols-2 md:gap-[25px] lg:grid-cols-3 lg:gap-[25px] xl:grid-cols-4 xl:gap-[20px] mb-12 border-0">
@@ -97,15 +101,15 @@ const ShopProfileData = ({ isOwner }) => {
             </h5>
           )}
         </div>
-      )} */}
+      )}
 
-      {/* {active === 3 && (
+       {active === 3 && (
         <div className="w-full">
           {allReviews &&
             allReviews.map((item, index) => (
               <div className="w-full flex my-4">
                 <img
-                  src={`${item.user.avatar?.url}`}
+                  src={`${backend_url}${item.user.avatar}`}
                   className="w-[50px] h-[50px] rounded-full"
                   alt=""
                 />
@@ -115,7 +119,7 @@ const ShopProfileData = ({ isOwner }) => {
                     <Ratings rating={item.rating} />
                   </div>
                   <p className="font-[400] text-[#000000a7]">{item?.comment}</p>
-                  <p className="text-[#000000a7] text-[14px]">{"2days ago"}</p>
+                  <p className="text-[#000000a7] text-[14px]">{item?.createdAt.slice(0,10)}</p>
                 </div>
               </div>
             ))}
@@ -125,7 +129,7 @@ const ShopProfileData = ({ isOwner }) => {
             </h5>
           )}
         </div>
-      )} */}
+      )} 
     </div>
   );
 };

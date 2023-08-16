@@ -8,20 +8,185 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { RxCross1 } from "react-icons/rx";
 import request from "../../utils/request";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+
+import {
+  CardNumberElement,
+  CardCvcElement,
+  CardExpiryElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 
 const Payment = () => {
+  const [orderData, setOrderData] = useState([]);
+  const [open, setOpen] = useState(false);
 
+  const { user } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const stripe = useStripe();
+  const elements = useElements();
+
+  useEffect(() => {
+    const orderData = JSON.parse(localStorage.getItem("latestOrder"));
+    setOrderData(orderData);
+  }, []);
+  const createOrder = (data, actions) => {
+    return actions.order
+      .create({
+        purchase_units: [
+          {
+            description: "Sunflower",
+            amount: {
+              currency_code: "USD",
+              value: orderData?.totalPrice,
+            },
+          },
+        ],
+        // not needed if a shipping address is actually needed
+        application_context: {
+          shipping_preference: "NO_SHIPPING",
+        },
+      })
+      .then((orderID) => {
+        return orderID;
+      });
+  };
+  const order = {
+    cart: orderData?.cart,
+    shippingAddress: orderData?.shippingAddress,
+    user: user && user,
+    totalPrice: orderData?.totalPrice,
+  };
+  const onApprove = async (data, actions) => {
+    return actions.order.capture().then(function (details) {
+      const { payer } = details;
+
+      let paymentInfo = payer;
+
+      if (paymentInfo !== undefined) {
+        paypalPaymentHandler(paymentInfo);
+      }
+    });
+  };
+  const paypalPaymentHandler = async (paymentInfo) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    order.paymentInfo = {
+      id: paymentInfo.payer_id,
+      status: "succeeded",
+      type: "Paypal",
+    };
+
+    await request
+      .post(`/order/create-order`, order, config)
+      .then((res) => {
+        setOpen(false);
+        navigate("/order/success");
+        toast.success("Order successful!");
+        localStorage.setItem("cartItems", JSON.stringify([]));
+        localStorage.setItem("latestOrder", JSON.stringify([]));
+        window.location.reload();
+      });
+  };  const paymentData = {
+    amount: Math.round(orderData?.totalPrice * 100),
+  };
+
+  const paymentHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const { data } = await request.post(
+        `/payment/process`,
+        paymentData,
+        config
+      );
+
+      const client_secret = data.client_secret;
+
+      if (!stripe || !elements) return;
+      const result = await stripe.confirmCardPayment(client_secret, {
+        payment_method: {
+          card: elements.getElement(CardNumberElement),
+        },
+      });
+
+      if (result.error) {
+        toast.error(result.error.message);
+      } else {
+        if (result.paymentIntent.status === "succeeded") {
+          order.paymnentInfo = {
+            id: result.paymentIntent.id,
+            status: result.paymentIntent.status,
+            type: "Credit Card",
+          };
+
+          await request
+            .post(`/order/create-order`, order, config)
+            .then((res) => {
+              setOpen(false);
+              navigate("/order/success");
+              toast.success("Order successful!");
+              localStorage.setItem("cartItems", JSON.stringify([]));
+              localStorage.setItem("latestOrder", JSON.stringify([]));
+              window.location.reload();
+            });
+        }
+      }
+    } catch (error) {
+      toast.error(error);
+    }
+  };
+  const cashOnDeliveryHandler = async (e) => {
+    e.preventDefault();
+
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    order.paymentInfo = {
+      type: "Cash On Delivery",
+    };
+
+    await request
+    .post(`/order/create-order`, order, config)
+    .then((res) => {
+      setOpen(false);
+      navigate("/order/success");
+      toast.success("Order successful!");
+      localStorage.setItem("cartItems", JSON.stringify([]));
+      localStorage.setItem("latestOrder", JSON.stringify([]));
+      window.location.reload();
+    });
+  };
 
   return (
     <div className="w-full flex flex-col items-center py-8">
       <div className="w-[90%] 1000px:w-[70%] block 800px:flex">
         <div className="w-full 800px:w-[65%]">
           <PaymentInfo
-            
+            user={user}
+            open={open}
+            setOpen={setOpen}
+            onApprove={onApprove}
+            createOrder={createOrder}
+            paymentHandler={paymentHandler}
+            cashOnDeliveryHandler={cashOnDeliveryHandler}
           />
         </div>
         <div className="w-full 800px:w-[35%] 800px:mt-0 mt-8">
-          <CartData />
+          <CartData orderData={orderData} />
         </div>
       </div>
     </div>
@@ -73,7 +238,7 @@ const PaymentInfo = ({
                 </div>
                 <div className="w-[50%]">
                   <label className="block pb-2">Exp Date</label>
-                  {/* <CardExpiryElement
+                  <CardExpiryElement
                     className={`${styles.input}`}
                     options={{
                       style: {
@@ -91,14 +256,14 @@ const PaymentInfo = ({
                         },
                       },
                     }}
-                  /> */}
+                  />
                 </div>
               </div>
 
               <div className="w-full flex pb-3">
                 <div className="w-[50%]">
                   <label className="block pb-2">Card Number</label>
-                  {/* <CardNumberElement
+                  <CardNumberElement
                     className={`${styles.input} !h-[35px] !w-[95%]`}
                     options={{
                       style: {
@@ -116,11 +281,11 @@ const PaymentInfo = ({
                         },
                       },
                     }}
-                  /> */}
+                  />
                 </div>
                 <div className="w-[50%]">
                   <label className="block pb-2">CVV</label>
-                  {/* <CardCvcElement
+                  <CardCvcElement
                     className={`${styles.input} !h-[35px]`}
                     options={{
                       style: {
@@ -138,7 +303,7 @@ const PaymentInfo = ({
                         },
                       },
                     }}
-                  /> */}
+                  />
                 </div>
               </div>
               <input
@@ -187,10 +352,10 @@ const PaymentInfo = ({
                       onClick={() => setOpen(false)}
                     />
                   </div>
-                    {/* <PayPalScriptProvider
+                  <PayPalScriptProvider
                       options={{
                         "client-id":
-                          "Aczac4Ry9_QA1t4c7TKH9UusH3RTe6onyICPoCToHG10kjlNdI-qwobbW9JAHzaRQwFMn2-k660853jn",
+                          "AWJi9xFvC_gbhseV1TSloRKirWW94IwiVaK4WL1TO8gZwUfT_P9r9jmBYY4DTjbetaT6JRoVoYehObKJ",
                       }}
                     >
                       <PayPalButtons
@@ -198,7 +363,7 @@ const PaymentInfo = ({
                         onApprove={onApprove}
                         createOrder={createOrder}
                       />
-                    </PayPalScriptProvider> */}
+                    </PayPalScriptProvider>
                 </div>
               </div>
             )}
@@ -256,7 +421,9 @@ const CartData = ({ orderData }) => {
       <br />
       <div className="flex justify-between border-b pb-3">
         <h3 className="text-[16px] font-[400] text-[#000000a4]">Discount:</h3>
-        <h5 className="text-[18px] font-[600]">{orderData?.discountPrice? "$" + orderData.discountPrice : "-"}</h5>
+        <h5 className="text-[18px] font-[600]">
+          {orderData?.discountPrice ? "$" + orderData.discountPrice : "-"}
+        </h5>
       </div>
       <h5 className="text-[18px] font-[600] text-end pt-3">
         ${orderData?.totalPrice}

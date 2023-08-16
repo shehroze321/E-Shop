@@ -12,17 +12,21 @@ import styles from "../../../styles/styles";
 import ProductDetailsCard from "../ProductDetailsCard/ProductDetailsCard";
 import { backend_url } from "../../../utils/request";
 import { useDispatch, useSelector } from "react-redux";
-import { addToWishlist, removeFromWishlist } from "../../../redux/actions/wishlist";
+import {
+  addToWishlist,
+  removeFromWishlist,
+} from "../../../redux/actions/wishlist";
 import { toast } from "react-toastify";
 import { addTocart } from "../../../redux/actions/cart";
+import Ratings from "../../Products/Ratings";
 
-const ProductCard = ({ data }) => {
+const ProductCard = ({ data, isEvent }) => {
   const { wishlist } = useSelector((state) => state.wishlist);
   const { cart } = useSelector((state) => state.cart);
   const [click, setClick] = useState(false);
   const [open, setOpen] = useState(false);
-  const dispatch=useDispatch();
-
+  const dispatch = useDispatch();
+  console.log("data with sold", data);
   // const d = data.name;
   // const product_name = d.replace(/\s+/g, "-");
   useEffect(() => {
@@ -37,14 +41,12 @@ const ProductCard = ({ data }) => {
     setClick(!click);
     dispatch(removeFromWishlist(data));
     toast.error("Item removed from wishlist");
-
   };
 
   const addToWishlistHandler = (data) => {
     setClick(!click);
     dispatch(addToWishlist(data));
     toast.success("Item added to wishlist");
-
   };
 
   const addToCartHandler = (id) => {
@@ -65,14 +67,26 @@ const ProductCard = ({ data }) => {
     <>
       <div className="w-full h-[370px] bg-white rounded-lg shadow-sm p-3 relative cursor-pointer">
         <div className="flex justify-end"></div>
-        <Link to={`/product/${data._id}`}>
+        <Link
+          to={`${
+            isEvent === true
+              ? `/product/${data._id}?isEvent=true`
+              : `/product/${data._id}`
+          }`}
+        >
           <img
             src={`${backend_url}${data.images && data.images[0]}`}
             alt=""
             className="w-full h-[170px] object-contain"
           />
         </Link>
-        <Link to={`/shop/preview/${data.shop._id}`}>
+        <Link
+          to={`${
+            isEvent === true
+              ? `/product/${data._id}?isEvent=true`
+              : `/product/${data._id}`
+          }`}
+        >
           <h5 className={`${styles.shop_name}`}>{data.shop.name}</h5>
         </Link>
         <Link to={`/product/${data._id}`}>
@@ -80,31 +94,7 @@ const ProductCard = ({ data }) => {
             {data.name.length > 40 ? data.name.slice(0, 40) + "..." : data.name}
           </h4>
           <div className="flex">
-            <AiFillStar
-              className="mr-2 cursor-pointer"
-              color="#f6BA00"
-              size={20}
-            />
-            <AiFillStar
-              className="mr-2 cursor-pointer"
-              color="#f6BA00"
-              size={20}
-            />
-            <AiFillStar
-              className="mr-2 cursor-pointer"
-              color="#f6BA00"
-              size={20}
-            />
-            <AiFillStar
-              className="mr-2 cursor-pointer"
-              color="#f6BA00"
-              size={20}
-            />
-            <AiOutlineStar
-              className="mr-2 cursor-pointer"
-              color="#f6BA00"
-              size={20}
-            />
+            <Ratings rating={data?.ratings} />
           </div>
           {/* <div className="flex">
           <Ratings rating={data?.ratings} />
@@ -113,7 +103,10 @@ const ProductCard = ({ data }) => {
           <div className="py-2 flex items-center justify-between">
             <div className="flex">
               <h5 className={`${styles.productDiscountPrice}`}>
-                {data.originalPrice === 0 ? data.originalPrice : data.discountPrice}$
+                {data.originalPrice === 0
+                  ? data.originalPrice
+                  : data.discountPrice}
+                $
               </h5>
               <h4 className={`${styles.price}`}>
                 {data.originalPrice ? data.originalPrice + " $" : null}

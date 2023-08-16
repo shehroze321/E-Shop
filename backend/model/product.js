@@ -41,29 +41,29 @@ const productSchema = new mongoose.Schema({
         //   },
     },
   ],
-//   reviews: [
-//     {
-//       user: {
-//         type: Object,
-//       },
-//       rating: {
-//         type: Number,
-//       },
-//       comment: {
-//         type: String,
-//       },
-//       productId: {
-//         type: String,
-//       },
-//       createdAt:{
-//         type: Date,
-//         default: Date.now(),
-//       }
-//     },
-//   ],
-//   ratings: {
-//     type: Number,
-//   },
+  reviews: [
+    {
+      user: {
+        type: Object,
+      },
+      rating: {
+        type: Number,
+      },
+      comment: {
+        type: String,
+      },
+      productId: {
+        type: String,
+      },
+      createdAt:{
+        type: Date,
+        default: Date.now(),
+      }
+    },
+  ],
+  ratings: {
+    type: Number,
+  },
   shopId: {
     type: String,
     required: true,
@@ -74,7 +74,7 @@ const productSchema = new mongoose.Schema({
   },
   sold_out: {
     type: Number,
-    default: 0,
+    // default: 0,
   },
   createdAt: {
     type: Date,
