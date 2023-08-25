@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "../../styles/styles";
 import CountDown from "./CountDown";
 import { Link } from "react-router-dom";
@@ -6,10 +6,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { backend_url } from "../../utils/request";
 import { addTocart } from "../../redux/actions/cart";
+import axios from "axios";
 
 const EventCard = ({ active, data }) => {
   const { cart } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
+  const [records, setRecords] = useState([]);
 
   const addToCartHandler = (data) => {
     const isItemExists = cart && cart.find((i) => i._id === data._id);
@@ -24,7 +26,22 @@ const EventCard = ({ active, data }) => {
         toast.success("Item added to cart successfully!");
       }
     }
-  }  
+  };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         "http://ec2-54-175-221-70.compute-1.amazonaws.com:3000/hospitals"
+  //       );
+  //       console.log("API Response:", response.data);
+  //       setRecords(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
 
   return (
     <div
